@@ -6,7 +6,7 @@ namespace Strongbox.Presentation.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DecisionController(IDecisionService decisionService) : ControllerBase
+    public class DecisionsController(IDecisionService decisionService) : ControllerBase
     {
         [HttpPost("submit")]
         public async Task<ActionResult> CreateDecision([FromBody] DecisionDto decision)
@@ -27,19 +27,19 @@ namespace Strongbox.Presentation.Controllers
             return Ok(result);
         }
 
-        [HttpPut("update")]
-        public async Task<ActionResult> UpdateDecision([FromBody] DecisionDto decision)
+        [HttpPut("update/{decisionId:Guid}")]
+        public async Task<ActionResult> UpdateDecision(Guid decisionId, [FromBody] DecisionDto decision)
         {
-            var result = await decisionService.UpdateDecisionAsync(decision);
-            if (result == null) return NotFound("Error in Decision update");
+            var result = await decisionService.UpdateDecisionAsync(decisionId, decision);
+            if (!result) return NotFound("Error in Decision update");
 
             return Ok(result);
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult> GetApproverDecisions([FromQuery] Guid approverId)
+        public async Task<ActionResult> GetDecisions([FromQuery] Guid approverId)
         {
-            var result = await decisionService.GetApproverDecisionsAsync(approverId);
+            var result = await decisionService.GetDecisionsAsync(approverId);
             if (result == null) return NotFound($"Decisions for Approver Id {approverId} not found");
 
             return Ok(result);

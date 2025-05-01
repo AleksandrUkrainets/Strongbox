@@ -2,6 +2,7 @@
 {
     public enum AccessType
     {
+        Blocked,
         Read,
         Edit
     }

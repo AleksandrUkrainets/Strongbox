@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Strongbox.Application.DTOs
+﻿namespace Strongbox.Application.DTOs
 {
     public class DecisionResultDto
     {
+        public Guid DecisionId { get; set; }
+        public Guid ApproverId { get; set; }
+        public Guid AccessRequestId { get; set; }
+        public bool IsApproved { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string Comment { get; set; } = default!;
     }
 }
