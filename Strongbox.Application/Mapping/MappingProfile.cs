@@ -24,25 +24,30 @@ namespace Strongbox.Application.Mapping
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
-
             CreateMap<DecisionDto, Decision>()
-                .ForMember(dest => dest.ApproverId, opt => opt.MapFrom(src => src.ApproverId))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.AccessRequestId, opt => opt.MapFrom(src => src.AccessRequestId))
-                .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.IsApproved))
-                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment));
+                .ForMember(dest => dest.ApproverId, opt => opt.MapFrom(src => src.ApproverId))
+                .ForMember(dest => dest.AccessRequest, opt => opt.Ignore())
+                .ForMember(dest => dest.Approver, opt => opt.Ignore());
 
             CreateMap<Decision, DecisionResultDto>()
                 .ForMember(dest => dest.DecisionId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ApproverId, opt => opt.MapFrom(src => src.ApproverId))
                 .ForMember(dest => dest.AccessRequestId, opt => opt.MapFrom(src => src.AccessRequestId))
-                .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(src => src.IsApproved))
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment));
+                .ForMember(dest => dest.ApproverId, opt => opt.MapFrom(src => src.ApproverId))
+                .ForMember(dest => dest.ApproverName, opt => opt.MapFrom(src => src.Approver != null ? src.Approver.Name : string.Empty))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
 
             CreateMap<Document, DocumentAttributesResultDto>()
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Name));
+                .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Access, opt => opt.Ignore());
 
             CreateMap<Document, DocumentResultDto>()
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.Id))

@@ -6,5 +6,6 @@
         public required string Name { get; set; }
         public PersonRole Role { get; set; }
         public ICollection<AccessRequest> AccessRequests { get; set; } = [];
+        public ICollection<Decision> Decisions { get; set; } = [];
     }
 }

@@ -5,44 +5,33 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class DocumentsController(IDocumentService documentService) : ControllerBase
+    [Route("api/[controller]")]
+    public class DocumentsController(IDocumentService svc) : ControllerBase
     {
-        [HttpGet("get")]
-        public async Task<ActionResult> GetDocument([FromQuery] Guid documentId, [FromQuery] Guid userId)
-        {
-            var result = await documentService.GetDocumentAsync(documentId, userId);
-            if (result == null) return NotFound($"Document with Id {documentId} not found");
-
-            return Ok(result);
-        }
-
-        [HttpPut("update")]
-        public async Task<ActionResult> UpdateDocument([FromBody] DocumentDto document)
-        {
-            var result = await documentService.UpdateDocumentAsync(document);
-            if (!result) return NotFound("Error in Document update");
-
-            return Ok(result);
-        }
-
-        [HttpGet("all")]
-        public async Task<ActionResult> GetDocuments([FromQuery] Guid userId)
-        {
-            var result = await documentService.GetDocumentsAsync(userId);
-            if (result == null) return NotFound($"Documents for User Id {userId} not found");
-
-            return Ok(result);
-        }
-
         [HttpGet("attributes")]
-        public async Task<ActionResult> GetDocumentsAttributes([FromQuery] Guid userId)
-        {
-            var result = await documentService.GetDocumentsAttributesAsync(userId);
-            if (result == null) return NotFound($"Documents for User Id {userId} not found");
+        public async Task<IActionResult> GetAttributes([FromQuery] Guid userId)
+            => Ok(await svc.GetDocumentsAttributesAsync(userId));
 
-            return Ok(result);
+
+        [HttpGet("get")]
+        public async Task<IActionResult> GetDocument([FromQuery] Guid documentId, [FromQuery] Guid userId)
+        {
+            try
+            {
+                var document = await svc.GetDocumentAsync(documentId, userId);
+                if (document == null) return NotFound();
+                return Ok(document);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
+
+
+        [HttpGet("approved")]
+        public async Task<IActionResult> GetApproved([FromQuery] Guid userId)
+            => Ok(await svc.GetApprovedDocumentsAsync(userId));
     }
 }

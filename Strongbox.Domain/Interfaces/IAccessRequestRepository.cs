@@ -9,5 +9,7 @@ namespace Strongbox.Domain.Interfaces
         public Task<bool> UpdateAccessRequestAsync(AccessRequest accessRequest);
         public Task<bool> DeleteAccessRequestAsync(Guid accessRequestId);
         public Task<ICollection<AccessRequest>> GetAccessRequestsAsync();
+        public Task<ICollection<AccessRequest>> GetAccessRequestsByUserAsync(Guid userId);
+        public Task<ICollection<AccessRequest>> GetPendingAccessRequestsAsync();
     }
 }

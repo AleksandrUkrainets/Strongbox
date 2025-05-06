@@ -4,36 +4,35 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class RequestsController(IAccessRequestService requestService) : ControllerBase
+    [Route("api/[controller]")]
+    public class RequestsController(IAccessRequestService svc) : ControllerBase
     {
         [HttpPost("submit")]
-        public async Task<ActionResult> CreateAccessRequest([FromBody] AccessRequestDto accessRequestDto)
+        public async Task<IActionResult> Create([FromBody] AccessRequestDto dto)
         {
-            var result = await requestService.CreateAccessRequestAsync(accessRequestDto);
-
-            if (result == null) return BadRequest("Error in Access Request creation");
-
-            return Ok(result);
+            var id = await svc.CreateAccessRequestAsync(dto);
+            if (id == null) return BadRequest("Cannot create request.");
+            return Ok(id);
         }
 
-        [HttpGet("check")]
-        public async Task<ActionResult> GetAccessRequest([FromQuery] Guid requestId, [FromQuery] Guid userId)
+
+        [HttpGet("my")]
+        public async Task<IActionResult> My([FromQuery] Guid userId)
+            => Ok(await svc.GetMyRequestsAsync(userId));
+
+
+        [HttpGet("pending")]
+        public async Task<IActionResult> Pending([FromQuery] Guid approverId)
         {
-            var result = await requestService.GetAccessRequestAsync(requestId, userId);
-            if (result == null) return NotFound($"Access request with Id {requestId} not found");
-
-            return Ok(result);
-        }
-
-        [HttpGet("all")]
-        public async Task<ActionResult> GetAccessRequests([FromQuery] Guid approverId)
-        {
-            var result = await requestService.GetAccessRequestsAsync(approverId);
-            if (result == null) return NotFound($"Access request for User Id {approverId} not found");
-
-            return Ok(result);
+            try
+            {
+                return Ok(await svc.GetPendingRequestsAsync(approverId));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
     }
 }

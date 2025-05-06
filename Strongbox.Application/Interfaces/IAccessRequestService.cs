@@ -4,9 +4,9 @@ namespace Strongbox.Application.Interfaces
 {
     public interface IAccessRequestService
     {
-        public Task<Guid?> CreateAccessRequestAsync(AccessRequestDto accessRequest);
-        public Task<AccessRequestResultDto?> GetAccessRequestAsync(Guid accessRequestId, Guid approverId);
-        public Task<ICollection<AccessRequestResultDto>> GetAccessRequestsAsync(Guid approverId);
+        public Task<Guid?> CreateAccessRequestAsync(AccessRequestDto accessRequestDto);
+        public Task<ICollection<AccessRequestResultDto>> GetMyRequestsAsync(Guid userId);
+        public Task<ICollection<AccessRequestResultDto>> GetPendingRequestsAsync(Guid approverId);
     }
 
 }

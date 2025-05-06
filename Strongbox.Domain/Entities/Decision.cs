@@ -5,13 +5,14 @@
         public Guid Id { get; set; }
 
         public Guid ApproverId { get; set; }
-        public User? Approver { get; set; }
+        public User Approver { get; set; } = null!;
 
         public Guid AccessRequestId { get; set; }
-        public AccessRequest? AccessRequest { get; set; }
+        public AccessRequest AccessRequest { get; set; } = null!;
 
-        public bool IsApproved { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public RequestStatus Status { get; set; }
+
+        public DateTime CreatedAt { get; set; }
         public string Comment { get; set; } = default!;
     }
 }

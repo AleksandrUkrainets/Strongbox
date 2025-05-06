@@ -4,45 +4,39 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class DecisionsController(IDecisionService decisionService) : ControllerBase
+    [Route("api/[controller]")]
+    public class DecisionsController(IDecisionService svc) : ControllerBase
     {
         [HttpPost("submit")]
-        public async Task<ActionResult> CreateDecision([FromBody] DecisionDto decision)
+        public async Task<IActionResult> Create([FromBody] DecisionDto dto)
         {
-            var result = await decisionService.CreateDecisionAsync(decision);
-
-            if (result == null) return BadRequest("Error in Decision creation");
-
-            return Ok(result);
+            var id = await svc.CreateDecisionAsync(dto);
+            if (id == null) return BadRequest("Cannot create decision.");
+            return Ok(id);
         }
 
-        [HttpGet("get")]
-        public async Task<ActionResult> GetDecision([FromQuery] Guid decisionId, [FromQuery] Guid approverId)
-        {
-            var result = await decisionService.GetDecisionAsync(decisionId, approverId);
-            if (result == null) return NotFound($"Decision with Id {decisionId} not found");
-
-            return Ok(result);
-        }
-
-        [HttpPut("update/{decisionId:Guid}")]
-        public async Task<ActionResult> UpdateDecision(Guid decisionId, [FromBody] DecisionDto decision)
-        {
-            var result = await decisionService.UpdateDecisionAsync(decisionId, decision);
-            if (!result) return NotFound("Error in Decision update");
-
-            return Ok(result);
-        }
 
         [HttpGet("all")]
-        public async Task<ActionResult> GetDecisions([FromQuery] Guid approverId)
-        {
-            var result = await decisionService.GetDecisionsAsync(approverId);
-            if (result == null) return NotFound($"Decisions for Approver Id {approverId} not found");
+        public async Task<IActionResult> All([FromQuery] Guid approverId)
+            => Ok(await svc.GetDecisionsAsync(approverId));
 
-            return Ok(result);
+
+        [HttpGet(("get"))]
+        public async Task<IActionResult> Get([FromQuery] Guid decisionId, [FromQuery] Guid approverId)
+        {
+            var decision = await svc.GetDecisionAsync(decisionId, approverId);
+            if (decision == null) return NotFound();
+            return Ok(decision);
+        }
+
+
+        [HttpPut("update/{decisionId}")]
+        public async Task<IActionResult> Update(Guid decisionId, [FromBody] DecisionDto dto)
+        {
+            var ok = await svc.UpdateDecisionAsync(decisionId, dto);
+            if (!ok) return BadRequest("Cannot update decision.");
+            return NoContent();
         }
     }
 }

@@ -6,60 +6,69 @@ using Strongbox.Domain.Interfaces;
 
 namespace Strongbox.Application.Services
 {
-    public class DecisionService(IDecisionRepository decisionRepository, IAccessRequestRepository accessRequestRepository, IUserRepository userRepository, IMapper mapper) : IDecisionService
+    public class DecisionService(IDecisionRepository decisionRepo, IAccessRequestRepository reqRepo, IUserRepository userRepo, IMapper mapper) : IDecisionService
     {
-        public async Task<Guid?> CreateDecisionAsync(DecisionDto decisionDto)
+        public async Task<Guid?> CreateDecisionAsync(DecisionDto dto)
         {
-            var approver = await userRepository.GetUserAsync(decisionDto.ApproverId);
-            if (approver == null || approver.Role == PersonRole.User) return null;
+            var approver = await userRepo.GetUserAsync(dto.ApproverId);
+            if (approver == null || approver.Role != PersonRole.Approver)
+                throw new UnauthorizedAccessException();
 
-            var accessRequest = await accessRequestRepository.GetAccessRequestAsync(decisionDto.AccessRequestId);
-            if (accessRequest == null || accessRequest.Status != RequestStatus.Pending) return null;
+            var request = await reqRepo.GetAccessRequestAsync(dto.AccessRequestId);
+            if (request == null) return null;
 
-            var decision = mapper.Map<Decision>(decisionDto);
+            request.Status = dto.Status;
+            await reqRepo.UpdateAccessRequestAsync(request);
+
+            var decision = mapper.Map<Decision>(dto);
             decision.Id = Guid.NewGuid();
-            decision.CreatedAt = DateTime.UtcNow;
 
-            accessRequest.Status = decision.IsApproved ? RequestStatus.Approved : RequestStatus.Rejected;
-
-            return await decisionRepository.CreateDecisionAsync(decision);
-        }
-
-        public async Task<DecisionResultDto?> GetDecisionAsync(Guid decisionId, Guid approverId)
-        {
-            var approver = await userRepository.GetUserAsync(approverId);
-            if (approver == null || approver.Role == PersonRole.User) return null;
-
-            var decision = await decisionRepository.GetDecisionAsync(decisionId);
-            if (decision == null || decision.ApproverId != approverId) return null;
-
-            return mapper.Map<DecisionResultDto>(decision);
+            return await decisionRepo.CreateDecisionAsync(decision);
         }
 
         public async Task<ICollection<DecisionResultDto>> GetDecisionsAsync(Guid approverId)
         {
-            var approver = await userRepository.GetUserAsync(approverId);
-            if (approver == null || approver.Role == PersonRole.User) return [];
+            var approver = await userRepo.GetUserAsync(approverId);
+            if (approver == null || approver.Role != PersonRole.Approver)
+                throw new UnauthorizedAccessException();
 
-            var decisions = await decisionRepository.GetDecisionsAsync();
+            var decisions = await decisionRepo.GetAllDecisionsAsync();
 
-            return mapper.Map<ICollection<DecisionResultDto>>(decisions);
+            return mapper.Map<List<DecisionResultDto>>(decisions);
         }
 
-        public async Task<bool> UpdateDecisionAsync(Guid decisionId, DecisionDto decisionDto)
+        public async Task<DecisionResultDto?> GetDecisionAsync(Guid decisionId, Guid approverId)
         {
-            var approver = await userRepository.GetUserAsync(decisionDto.ApproverId);
-            if (approver == null || approver.Role == PersonRole.User) return false;
+            var approver = await userRepo.GetUserAsync(approverId);
+            if (approver == null || approver.Role != PersonRole.Approver)
+                throw new UnauthorizedAccessException();
 
-            var existing = await decisionRepository.GetDecisionAsync(decisionId);
-            if (existing == null || existing.ApproverId != decisionDto.ApproverId) return false;
+            var decision = await decisionRepo.GetDecisionAsync(decisionId);
+            if (decision == null) return null;
 
-            existing.Comment = decisionDto.Comment;
-            existing.IsApproved = decisionDto.IsApproved;
-            existing.CreatedAt = DateTime.UtcNow;
+            return mapper.Map<DecisionResultDto>(decision);
+        }
 
-            return await decisionRepository.UpdateDecisionAsync(existing);
+        public async Task<bool> UpdateDecisionAsync(Guid decisionId, DecisionDto dto)
+        {
+            var approver = await userRepo.GetUserAsync(dto.ApproverId);
+            if (approver == null || approver.Role != PersonRole.Approver)
+                throw new UnauthorizedAccessException();
+
+            var existing = await decisionRepo.GetDecisionAsync(decisionId);
+            if (existing == null) return false;
+
+            mapper.Map(dto, existing);
+            var updated = await decisionRepo.UpdateDecisionAsync(existing);
+
+            var request = await reqRepo.GetAccessRequestAsync(existing.AccessRequestId);
+            if (request != null)
+            {
+                request.Status = existing.Status;
+                await reqRepo.UpdateAccessRequestAsync(request);
+            }
+
+            return updated;
         }
     }
-
 }

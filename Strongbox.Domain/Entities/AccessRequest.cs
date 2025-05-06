@@ -13,10 +13,10 @@
 
         public Decision? Decision { get; set; }
 
-        public required string Reason { get; set; }
         public required AccessType Type { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public RequestStatus Status { get; set; } = RequestStatus.Pending;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public required string Reason { get; set; }
 
     }
 }

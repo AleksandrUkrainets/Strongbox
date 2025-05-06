@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Strongbox.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Strongbox.Persistance
 {
@@ -18,6 +13,18 @@ namespace Strongbox.Persistance
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AccessRequest>()
+                .HasOne(ar => ar.Decision)
+                .WithOne(d => d.AccessRequest)
+                .HasForeignKey<Decision>(d => d.AccessRequestId);
+
+            modelBuilder.Entity<Decision>()
+                .HasOne(d => d.Approver)
+                .WithMany(u => u.Decisions)
+                .HasForeignKey(d => d.ApproverId);
+
+
 
             // Seed 
             var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
