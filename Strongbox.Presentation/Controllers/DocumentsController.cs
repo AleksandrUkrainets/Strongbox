@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
@@ -7,6 +8,7 @@ namespace Strongbox.Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DocumentsController(IDocumentService svc) : ControllerBase
     {
         [HttpGet("attributes")]

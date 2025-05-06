@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 
@@ -6,6 +7,7 @@ namespace Strongbox.Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class RequestsController(IAccessRequestService svc) : ControllerBase
     {
         [HttpPost("submit")]
@@ -23,6 +25,7 @@ namespace Strongbox.Presentation.Controllers
 
 
         [HttpGet("pending")]
+        [Authorize(Policy = "ApproverOnly")]
         public async Task<IActionResult> Pending([FromQuery] Guid approverId)
         {
             try

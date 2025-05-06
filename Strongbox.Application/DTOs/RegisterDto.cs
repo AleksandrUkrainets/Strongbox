@@ -1,0 +1,12 @@
+﻿using Strongbox.Domain.Entities;
+
+namespace Strongbox.Application.DTOs
+{
+    public class RegisterDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public PersonRole Role { get; set; } = PersonRole.User;
+    }
+}

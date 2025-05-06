@@ -53,6 +53,10 @@ namespace Strongbox.Application.Mapping
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.DocumentContent, opt => opt.MapFrom(src => src.Content));
+
+            CreateMap<RegisterDto, User>()
+                .ForMember(u => u.PasswordHash, o => o.Ignore())
+                .ForMember(u => u.PasswordSalt, o => o.Ignore());
         }
     }
 }

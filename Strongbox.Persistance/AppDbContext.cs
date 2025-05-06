@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Strongbox.Domain.Entities;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Strongbox.Persistance
 {
@@ -27,8 +30,9 @@ namespace Strongbox.Persistance
 
 
             // Seed 
-            var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
             var approverId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+            var approverSalt = Convert.FromBase64String("w+p9YXePwGmaMDIdYWovvi8zMGuH8451L1bAyLudVMUMrmW2k/q0NQADvgnjP9Gxnaa2MkN4AdJB8zox5h3iRnCdv7o1MBtGNlYLq7AnzMw7Kzgr+NI+O4wCfG7uj3DIpBqQYpSYnq8uFLfie4ePQI0xrukWIURMIjf31cNC/Rc=");
+            var approverHash = Convert.FromBase64String("3Gvdlr48le8sDEqVnQJlVh2vj6CR1ZMupBnYPMgcszv4OqpYTByhQIOFa59W1amSNdEEy4oBzHknyLqJ0aC4Ag==");
 
             var doc1Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
             var doc2Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
@@ -37,8 +41,15 @@ namespace Strongbox.Persistance
             var createdAt = new DateTime(2024, 01, 01, 0, 0, 0, DateTimeKind.Utc);
 
             modelBuilder.Entity<User>().HasData(
-                new User { Id = userId, Name = "Regular User", Role = PersonRole.User },
-                new User { Id = approverId, Name = "Approver User", Role = PersonRole.Approver }
+                new User
+                {
+                    Id = approverId,
+                    Name = "Approver User",
+                    Role = PersonRole.Approver,
+                    Username = "ApproverUser",
+                    PasswordSalt = approverSalt,
+                    PasswordHash = approverHash,
+                }
             );
 
 
