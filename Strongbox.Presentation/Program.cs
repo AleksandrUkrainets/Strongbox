@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,19 +17,17 @@ namespace Strongbox.Presentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddDbContext<AppDbContext>(op =>
+            builder.Services.AddDbContext<AppDbContext>(options =>
             {
-                op.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnectionString"));
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnectionString"));
             });
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
             builder.Services.AddControllers();
-            builder.Services.AddOpenApi();
+
             builder.Services.AddSwaggerGen(opt =>
             {
                 opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Strongbox API", Version = "v1" });
-
                 opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -38,9 +35,8 @@ namespace Strongbox.Presentation
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Write JWT token from /oauth/callback"
+                    Description = "Enter: Bearer {your token}"
                 });
-
                 opt.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -56,20 +52,21 @@ namespace Strongbox.Presentation
                     }
                 });
             });
+
             builder.Services.AddScoped<IAccessRequestRepository, AccessRequestRepository>();
             builder.Services.AddScoped<IDecisionRepository, DecisionRepository>();
             builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+
             builder.Services.AddScoped<IAccessRequestService, AccessRequestService>();
             builder.Services.AddScoped<IDecisionService, DecisionService>();
             builder.Services.AddScoped<IDocumentService, DocumentService>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
-            // JWT authentication
-            var jwtKey = builder.Configuration["Jwt:Key"];
-            var issuer = builder.Configuration["Jwt:Issuer"];
-            var audience = builder.Configuration["Jwt:Audience"];
+            var jwtKey = builder.Configuration["Jwt:Key"]!;
+            var issuer = builder.Configuration["Jwt:Issuer"]!;
+            var audience = builder.Configuration["Jwt:Audience"]!;
 
             builder.Services.AddAuthentication(options =>
             {
@@ -101,9 +98,11 @@ namespace Strongbox.Presentation
 
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
-                app.MapSwagger();
                 app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Strongbox API v1");
+                });
             }
 
             app.UseHttpsRedirection();

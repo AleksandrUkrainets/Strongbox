@@ -15,7 +15,6 @@ namespace Strongbox.Persistance.Repositories
 
         public async Task<bool> CreateUserAsync(User user, string plainPassword)
         {
-            // Generate salt & hash
             using var hmac = new HMACSHA512();
             user.PasswordSalt = hmac.Key;
             user.PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(plainPassword));
@@ -25,17 +24,17 @@ namespace Strongbox.Persistance.Repositories
             return await dbContext.SaveChangesAsync() > 0;
         }
 
+        public async Task<ICollection<User>> GetUsersAsync() =>
+            await dbContext.Users.ToListAsync();
+
+        public async Task<bool> UpdateUserAsync(User user)
+        {
+            dbContext.Users.Update(user);
+
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
         Task<bool> IUserRepository.DeleteUserAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ICollection<User>> IUserRepository.GetUsersAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<bool> IUserRepository.UpdateUserAsync(User user)
         {
             throw new NotImplementedException();
         }

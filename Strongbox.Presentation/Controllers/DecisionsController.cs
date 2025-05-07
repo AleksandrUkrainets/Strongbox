@@ -7,7 +7,7 @@ namespace Strongbox.Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "ApproverOnly")]
+    [Authorize(Policy = "ApproverOnly, AdminOnly")]
     public class DecisionsController(IDecisionService svc) : ControllerBase
     {
         [HttpPost("submit")]

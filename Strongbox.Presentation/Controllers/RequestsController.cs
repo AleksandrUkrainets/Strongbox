@@ -25,7 +25,7 @@ namespace Strongbox.Presentation.Controllers
 
 
         [HttpGet("pending")]
-        [Authorize(Policy = "ApproverOnly")]
+        [Authorize(Policy = "ApproverOnly, AdminOnly")]
         public async Task<IActionResult> Pending([FromQuery] Guid approverId)
         {
             try

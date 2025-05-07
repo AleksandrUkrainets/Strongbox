@@ -1,0 +1,41 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Strongbox.Application.DTOs;
+using Strongbox.Application.Interfaces;
+
+namespace Strongbox.Presentation.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UsersController(IUserService svc) : ControllerBase
+    {
+        [HttpGet("all")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> GetAll()
+        {
+            var list = await svc.GetAllUsersAsync();
+
+            return Ok(list);
+        }
+
+        [HttpPut("role")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeUserRoleDto dto)
+        {
+            var ok = await svc.ChangeUserRoleAsync(dto);
+            if (!ok) return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpPut("password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var success = await svc.ChangePasswordAsync(dto);
+            if (!success) return BadRequest("Bad User Name or Old Password");
+
+            return NoContent();
+        }
+    }
+}

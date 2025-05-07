@@ -15,11 +15,13 @@ namespace Strongbox.Application.Services
     {
         public async Task<AuthResponseDto?> RegisterAsync(RegisterDto dto)
         {
-            if (await userRepo.GetByUsernameAsync(dto.Username) != null)
-                return null;
+            if (await userRepo.GetByUsernameAsync(dto.Username) != null) return null;
+            var adminPassword = config["Admins:AdminPassword"];
+            var adminName = config["Admins:AdminName"];
 
             var user = mapper.Map<User>(dto);
             user.Id = Guid.NewGuid();
+            user.Role = adminPassword == dto.Password && adminName == dto.Username ? PersonRole.Admin : PersonRole.User;
 
             var created = await userRepo.CreateUserAsync(user, dto.Password);
             if (!created) return null;

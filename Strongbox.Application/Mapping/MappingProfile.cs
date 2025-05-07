@@ -57,6 +57,12 @@ namespace Strongbox.Application.Mapping
             CreateMap<RegisterDto, User>()
                 .ForMember(u => u.PasswordHash, o => o.Ignore())
                 .ForMember(u => u.PasswordSalt, o => o.Ignore());
+
+            CreateMap<User, UserResultDto>()
+                .ForMember(d => d.UserId, o => o.MapFrom(s => s.Id))
+                .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))
+                .ForMember(d => d.Username, o => o.MapFrom(s => s.Username))
+                .ForMember(d => d.Role, o => o.MapFrom(s => s.Role));
         }
     }
 }

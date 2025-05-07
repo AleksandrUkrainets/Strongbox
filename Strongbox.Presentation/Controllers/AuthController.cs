@@ -8,13 +8,13 @@ namespace Strongbox.Presentation.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _svc;
         public AuthController(IAuthService svc) => _svc = svc;
 
         [HttpPost("register")]
-        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var result = await _svc.RegisterAsync(dto);
@@ -23,7 +23,6 @@ namespace Strongbox.Presentation.Controllers
         }
 
         [HttpPost("login")]
-        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var result = await _svc.LoginAsync(dto);
