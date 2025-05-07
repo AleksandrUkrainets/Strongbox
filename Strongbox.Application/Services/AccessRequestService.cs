@@ -21,8 +21,9 @@ namespace Strongbox.Application.Services
             req.Status = RequestStatus.Pending;
             req.CreatedAt = DateTime.UtcNow;
 
-            await reqRepo.CreateAccessRequestAsync(req);
-            return req.Id;
+            var newId = await reqRepo.CreateAccessRequestAsync(req);
+
+            return newId;
         }
 
         public async Task<ICollection<AccessRequestResultDto>> GetMyRequestsAsync(Guid userId)
