@@ -7,15 +7,12 @@ using Strongbox.Application.Interfaces;
 namespace Strongbox.Presentation.Controllers
 {
     [AllowAnonymous]
-    public class AuthController : ApiBaseController
+    public class AuthController(IAuthService svc) : ApiBaseController
     {
-        private readonly IAuthService _svc;
-        public AuthController(IAuthService svc) => _svc = svc;
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var result = await _svc.RegisterAsync(dto);
+            var result = await svc.RegisterAsync(dto);
             if (result == null) return BadRequest("Username already taken.");
             return Ok(result);
         }
@@ -23,7 +20,7 @@ namespace Strongbox.Presentation.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var result = await _svc.LoginAsync(dto);
+            var result = await svc.LoginAsync(dto);
             if (result == null) return Unauthorized();
             return Ok(result);
         }
