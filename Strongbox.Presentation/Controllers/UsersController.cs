@@ -5,9 +5,7 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsersController(IUserService svc) : ControllerBase
+    public class UsersController(IUserService svc) : ApiBaseController
     {
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]

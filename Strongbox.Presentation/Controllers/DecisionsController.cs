@@ -5,15 +5,14 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
     [Authorize(Roles = "Approver, Admin")]
-    public class DecisionsController(IDecisionService svc) : ControllerBase
+    public class DecisionsController(IDecisionService svc) : ApiBaseController
     {
         [HttpPost("submit")]
         public async Task<IActionResult> Create([FromBody] DecisionDto dto)
         {
-            var id = await svc.CreateDecisionAsync(dto);
+            if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+            var id = await svc.CreateDecisionAsync(userId, dto);
             if (id == null) return BadRequest("Cannot create decision.");
 
             return Ok(id);

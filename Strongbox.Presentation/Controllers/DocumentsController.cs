@@ -1,25 +1,28 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
     [Authorize]
-    public class DocumentsController(IDocumentService svc) : ControllerBase
+    public class DocumentsController(IDocumentService svc) : ApiBaseController
     {
         [HttpGet("attributes")]
         public async Task<IActionResult> GetAttributes()
-            => Ok(await svc.GetDocumentsAttributesAsync());
+        {
+            if (!TryGetCurrentUser(out var userId, out var role)) return Unauthorized();
 
+            var result = await svc.GetDocumentsAttributesAsync(userId, role);
+
+            return Ok(result);
+        }
 
         [HttpGet("get")]
         public async Task<IActionResult> GetDocument([FromQuery] Guid documentId)
         {
-            var document = await svc.GetDocumentAsync(documentId);
+            if (!TryGetCurrentUser(out var userId, out var role)) return Unauthorized();
+
+            var document = await svc.GetDocumentAsync(userId, role, documentId);
             if (document == null) return NotFound();
 
             return Ok(document);
@@ -28,6 +31,12 @@ namespace Strongbox.Presentation.Controllers
 
         [HttpGet("approved")]
         public async Task<IActionResult> GetApproved()
-            => Ok(await svc.GetApprovedDocumentsAsync());
+        {
+            if (!TryGetCurrentUser(out var userId, out var role)) return Unauthorized();
+
+            var list = await svc.GetApprovedDocumentsAsync(userId, role);
+
+            return Ok(list);
+        }
     }
 }

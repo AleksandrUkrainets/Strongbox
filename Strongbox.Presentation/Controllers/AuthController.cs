@@ -6,10 +6,8 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     [AllowAnonymous]
-    public class AuthController : ControllerBase
+    public class AuthController : ApiBaseController
     {
         private readonly IAuthService _svc;
         public AuthController(IAuthService svc) => _svc = svc;

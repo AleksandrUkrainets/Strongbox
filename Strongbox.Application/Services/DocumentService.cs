@@ -8,98 +8,73 @@ using System.Security.Claims;
 
 namespace Strongbox.Application.Services
 {
-    public class DocumentService(IDocumentRepository docRepo, IAccessRequestRepository reqRepo, IMapper mapper, IHttpContextAccessor httpCtx) : IDocumentService
+    public class DocumentService(IDocumentRepository docRepo, IAccessRequestRepository reqRepo, IMapper mapper) : IDocumentService
     {
-        private Guid GetCurrentUserId()
+        public async Task<ICollection<DocumentAttributesResultDto>> GetDocumentsAttributesAsync(Guid userId, PersonRole role)
         {
-            var sub = httpCtx.HttpContext?.User
-                      .FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? throw new UnauthorizedAccessException();
-            return Guid.Parse(sub);
-        }
-        private PersonRole GetCurrentUserRole()
-        {
-            var role = httpCtx.HttpContext?.User
-                       .FindFirst(ClaimTypes.Role)?.Value
-                   ?? throw new UnauthorizedAccessException();
-            return Enum.Parse<PersonRole>(role);
-        }
+            var dtos = mapper.Map<List<DocumentAttributesResultDto>>(await docRepo.GetDocumentsAsync());
 
-        public async Task<ICollection<DocumentAttributesResultDto>> GetDocumentsAttributesAsync()
-        {
-            var userId = GetCurrentUserId();
-            var role = GetCurrentUserRole();
-
-            var documentsAttributesResult = mapper.Map<List<DocumentAttributesResultDto>>(await docRepo.GetDocumentsAsync());
-
-            if (role == PersonRole.Approver || role == PersonRole.Admin)
+            if (role is PersonRole.Approver or PersonRole.Admin)
             {
-                documentsAttributesResult.ForEach(d => d.Access = AccessType.Edit);
+                dtos.ForEach(d => d.Access = AccessType.Edit);
 
-                return documentsAttributesResult;
+                return dtos;
             }
 
             var approved = (await reqRepo.GetAccessRequestsByUserAsync(userId))
                 .Where(r => r.Status == RequestStatus.Approved)
                 .ToDictionary(r => r.DocumentId, r => r.Type);
 
-            documentsAttributesResult.ForEach(d =>
+            dtos.ForEach(d =>
                 d.Access = approved.TryGetValue(d.DocumentId, out var t)
                     ? t
                     : AccessType.Blocked
             );
 
-            return documentsAttributesResult;
+            return dtos;
         }
 
-        public async Task<DocumentResultDto?> GetDocumentAsync(Guid documentId)
+        public async Task<DocumentResultDto?> GetDocumentAsync(Guid userId, PersonRole role, Guid documentId)
         {
-            var userId = GetCurrentUserId();
-            var role = GetCurrentUserRole();
             var document = await docRepo.GetDocumentAsync(documentId);
             if (document == null) return null;
 
-
             AccessType access;
-            if (role == PersonRole.Approver || role == PersonRole.Admin)
+            if (role is PersonRole.Approver or PersonRole.Admin)
             {
                 access = AccessType.Edit;
             }
             else
             {
-                var request = (await reqRepo.GetAccessRequestsByUserAsync(userId))
+                var req = (await reqRepo.GetAccessRequestsByUserAsync(userId))
                           .FirstOrDefault(r => r.DocumentId == documentId && r.Status == RequestStatus.Approved)
-                       ?? throw new UnauthorizedAccessException();
+                      ?? throw new UnauthorizedAccessException();
 
-                access = request.Type;
+                access = req.Type;
             }
 
-            var documentResult = mapper.Map<DocumentResultDto>(document);
-            documentResult.Access = access;
+            var result = mapper.Map<DocumentResultDto>(document);
+            result.Access = access;
 
-            return documentResult;
+            return result;
         }
 
-        public async Task<ICollection<DocumentResultDto>> GetApprovedDocumentsAsync()
+        public async Task<ICollection<DocumentResultDto>> GetApprovedDocumentsAsync(Guid userId, PersonRole role)
         {
-            var userId = GetCurrentUserId();
-            var role = GetCurrentUserRole();
+            var dtos = mapper.Map<List<DocumentResultDto>>(await docRepo.GetDocumentsAsync());
 
-            var documents = await docRepo.GetDocumentsAsync();
-            var documentsResult = mapper.Map<List<DocumentResultDto>>(documents);
-
-            if (role == PersonRole.Approver || role == PersonRole.Admin)
+            if (role is PersonRole.Approver or PersonRole.Admin)
             {
-                documentsResult.ForEach(d => d.Access = AccessType.Edit);
+                dtos.ForEach(d => d.Access = AccessType.Edit);
 
-                return documentsResult;
+                return dtos;
             }
 
             var approvedMap = (await reqRepo.GetAccessRequestsByUserAsync(userId))
                 .Where(r => r.Status == RequestStatus.Approved)
                 .ToDictionary(r => r.DocumentId, r => r.Type);
 
-            return documentsResult
+            return dtos
                 .Where(d => approvedMap.ContainsKey(d.DocumentId))
                 .Select(d =>
                 {

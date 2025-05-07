@@ -5,15 +5,14 @@ using Strongbox.Application.Interfaces;
 
 namespace Strongbox.Presentation.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class RequestsController(IAccessRequestService svc) : ControllerBase
+    public class RequestsController(IAccessRequestService svc) : ApiBaseController
     {
         [HttpPost("submit")]
+        [Authorize(Roles = "User")]
         public async Task<IActionResult> Create([FromBody] AccessRequestDto dto)
         {
-            var id = await svc.CreateAccessRequestAsync(dto);
+            if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+            var id = await svc.CreateAccessRequestAsync(userId, dto);
             if (id == null) return BadRequest("Cannot create request.");
 
             return Ok(id);
@@ -21,7 +20,14 @@ namespace Strongbox.Presentation.Controllers
 
 
         [HttpGet("my")]
-        public async Task<IActionResult> My() => Ok(await svc.GetMyRequestsAsync());
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> My()
+        {
+            if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+            var list = await svc.GetMyRequestsAsync(userId);
+
+            return Ok(list);
+        }
 
 
         [HttpGet("pending")]
