@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 using Strongbox.Domain.Entities;
 using Strongbox.Domain.Interfaces;
-using System.Security.Claims;
 
 namespace Strongbox.Application.Services
 {

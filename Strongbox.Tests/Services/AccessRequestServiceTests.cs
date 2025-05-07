@@ -108,8 +108,7 @@ namespace Strongbox.Tests.Services
             var userId = Guid.NewGuid();
             var domainList = new List<AccessRequest>
             {
-                new AccessRequest
-                {
+                new() {
                     Id          = Guid.NewGuid(),
                     UserId      = userId,
                     DocumentId  = Guid.NewGuid(),
@@ -121,8 +120,7 @@ namespace Strongbox.Tests.Services
             };
             var dtoList = new List<AccessRequestResultDto>
             {
-                new AccessRequestResultDto
-                {
+                new() {
                     AccessRequestId = domainList[0].Id,
                     UserId          = userId,
                     UserName        = "User",
@@ -154,8 +152,7 @@ namespace Strongbox.Tests.Services
             // Arrange
             var domainList = new List<AccessRequest>
             {
-                new AccessRequest
-                {
+                new() {
                     Id          = Guid.NewGuid(),
                     UserId      = Guid.NewGuid(),
                     DocumentId  = Guid.NewGuid(),
@@ -167,8 +164,7 @@ namespace Strongbox.Tests.Services
             };
             var dtoList = new List<AccessRequestResultDto>
             {
-                new AccessRequestResultDto
-                {
+                new() {
                     AccessRequestId = domainList[0].Id,
                     UserId          = domainList[0].UserId,
                     UserName        = "Approver",

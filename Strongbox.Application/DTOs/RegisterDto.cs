@@ -1,6 +1,4 @@
-﻿using Strongbox.Domain.Entities;
-
-namespace Strongbox.Application.DTOs
+﻿namespace Strongbox.Application.DTOs
 {
     public class RegisterDto
     {
