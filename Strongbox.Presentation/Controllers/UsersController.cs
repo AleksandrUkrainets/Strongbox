@@ -10,7 +10,7 @@ namespace Strongbox.Presentation.Controllers
     public class UsersController(IUserService svc) : ControllerBase
     {
         [HttpGet("all")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
             var list = await svc.GetAllUsersAsync();
@@ -19,7 +19,7 @@ namespace Strongbox.Presentation.Controllers
         }
 
         [HttpPut("role")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangeRole([FromBody] ChangeUserRoleDto dto)
         {
             var ok = await svc.ChangeUserRoleAsync(dto);

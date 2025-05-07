@@ -22,6 +22,7 @@ namespace Strongbox.Presentation
                 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnectionString"));
             });
 
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddControllers();
 
@@ -88,9 +89,7 @@ namespace Strongbox.Presentation
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("ApproverOnly", policy => policy.RequireRole("Approver"))
-                .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 

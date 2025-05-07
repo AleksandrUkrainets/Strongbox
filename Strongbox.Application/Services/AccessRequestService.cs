@@ -1,16 +1,30 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 using Strongbox.Domain.Entities;
 using Strongbox.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace Strongbox.Application.Services
 {
-    public class AccessRequestService(IAccessRequestRepository reqRepo, IUserRepository userRepo, IDocumentRepository docRepo, IMapper mapper) : IAccessRequestService
+    public class AccessRequestService(IAccessRequestRepository reqRepo,
+        IUserRepository userRepo,
+        IDocumentRepository docRepo,
+        IMapper mapper,
+        IHttpContextAccessor httpCtx) : IAccessRequestService
     {
+        private Guid CurrentUserId()
+        {
+            var sub = httpCtx.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                      ?? throw new UnauthorizedAccessException();
+            return Guid.Parse(sub);
+        }
+
         public async Task<Guid?> CreateAccessRequestAsync(AccessRequestDto dto)
         {
-            var user = await userRepo.GetUserAsync(dto.UserId);
+            var userId = CurrentUserId();
+            var user = await userRepo.GetUserAsync(userId);
             if (user == null) return null;
 
             var doc = await docRepo.GetDocumentAsync(dto.DocumentId);
@@ -20,23 +34,26 @@ namespace Strongbox.Application.Services
             req.Id = Guid.NewGuid();
             req.Status = RequestStatus.Pending;
             req.CreatedAt = DateTime.UtcNow;
+            req.UserId = userId;
 
             await reqRepo.CreateAccessRequestAsync(req);
 
             return req.Id;
         }
 
-        public async Task<ICollection<AccessRequestResultDto>> GetMyRequestsAsync(Guid userId)
+        public async Task<ICollection<AccessRequestResultDto>> GetMyRequestsAsync()
         {
+            var userId = CurrentUserId();
             var list = await reqRepo.GetAccessRequestsByUserAsync(userId);
 
             return mapper.Map<List<AccessRequestResultDto>>(list);
         }
 
-        public async Task<ICollection<AccessRequestResultDto>> GetPendingRequestsAsync(Guid approverId)
+        public async Task<ICollection<AccessRequestResultDto>> GetPendingRequestsAsync()
         {
-            var approver = await userRepo.GetUserAsync(approverId);
-            if (approver == null || approver.Role != PersonRole.Approver)
+            var userId = CurrentUserId();
+            var approver = await userRepo.GetUserAsync(userId);
+            if (approver?.Role != PersonRole.Approver)
                 throw new UnauthorizedAccessException();
 
             var list = await reqRepo.GetPendingAccessRequestsAsync();

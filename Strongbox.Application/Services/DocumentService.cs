@@ -1,21 +1,38 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 using Strongbox.Domain.Entities;
 using Strongbox.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace Strongbox.Application.Services
 {
-    public class DocumentService(IDocumentRepository docRepo, IAccessRequestRepository reqRepo, IUserRepository userRepo, IMapper mapper) : IDocumentService
+    public class DocumentService(IDocumentRepository docRepo, IAccessRequestRepository reqRepo, IMapper mapper, IHttpContextAccessor httpCtx) : IDocumentService
     {
-        public async Task<ICollection<DocumentAttributesResultDto>> GetDocumentsAttributesAsync(Guid userId)
+        private Guid GetCurrentUserId()
         {
-            var user = await userRepo.GetUserAsync(userId)
-                       ?? throw new UnauthorizedAccessException();
+            var sub = httpCtx.HttpContext?.User
+                      .FindFirst(ClaimTypes.NameIdentifier)?.Value
+                  ?? throw new UnauthorizedAccessException();
+            return Guid.Parse(sub);
+        }
+        private PersonRole GetCurrentUserRole()
+        {
+            var role = httpCtx.HttpContext?.User
+                       .FindFirst(ClaimTypes.Role)?.Value
+                   ?? throw new UnauthorizedAccessException();
+            return Enum.Parse<PersonRole>(role);
+        }
+
+        public async Task<ICollection<DocumentAttributesResultDto>> GetDocumentsAttributesAsync()
+        {
+            var userId = GetCurrentUserId();
+            var role = GetCurrentUserRole();
 
             var documentsAttributesResult = mapper.Map<List<DocumentAttributesResultDto>>(await docRepo.GetDocumentsAsync());
 
-            if (user.Role == PersonRole.Approver || user.Role == PersonRole.Admin)
+            if (role == PersonRole.Approver || role == PersonRole.Admin)
             {
                 documentsAttributesResult.ForEach(d => d.Access = AccessType.Edit);
 
@@ -35,26 +52,26 @@ namespace Strongbox.Application.Services
             return documentsAttributesResult;
         }
 
-        public async Task<DocumentResultDto?> GetDocumentAsync(Guid documentId, Guid userId)
+        public async Task<DocumentResultDto?> GetDocumentAsync(Guid documentId)
         {
+            var userId = GetCurrentUserId();
+            var role = GetCurrentUserRole();
             var document = await docRepo.GetDocumentAsync(documentId);
             if (document == null) return null;
 
-            var user = await userRepo.GetUserAsync(userId)
-                       ?? throw new UnauthorizedAccessException();
 
             AccessType access;
-            if (user.Role == PersonRole.Approver || user.Role == PersonRole.Admin)
+            if (role == PersonRole.Approver || role == PersonRole.Admin)
             {
                 access = AccessType.Edit;
             }
             else
             {
-                var req = (await reqRepo.GetAccessRequestsByUserAsync(userId))
+                var request = (await reqRepo.GetAccessRequestsByUserAsync(userId))
                           .FirstOrDefault(r => r.DocumentId == documentId && r.Status == RequestStatus.Approved)
                        ?? throw new UnauthorizedAccessException();
 
-                access = req.Type;
+                access = request.Type;
             }
 
             var documentResult = mapper.Map<DocumentResultDto>(document);
@@ -63,16 +80,15 @@ namespace Strongbox.Application.Services
             return documentResult;
         }
 
-
-        public async Task<ICollection<DocumentResultDto>> GetApprovedDocumentsAsync(Guid userId)
+        public async Task<ICollection<DocumentResultDto>> GetApprovedDocumentsAsync()
         {
-            var user = await userRepo.GetUserAsync(userId)
-                       ?? throw new UnauthorizedAccessException();
+            var userId = GetCurrentUserId();
+            var role = GetCurrentUserRole();
 
             var documents = await docRepo.GetDocumentsAsync();
             var documentsResult = mapper.Map<List<DocumentResultDto>>(documents);
 
-            if (user.Role == PersonRole.Approver || user.Role == PersonRole.Admin)
+            if (role == PersonRole.Approver || role == PersonRole.Admin)
             {
                 documentsResult.ForEach(d => d.Access = AccessType.Edit);
 

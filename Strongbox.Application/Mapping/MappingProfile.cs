@@ -9,10 +9,16 @@ namespace Strongbox.Application.Mapping
         public MappingProfile()
         {
             CreateMap<AccessRequestDto, AccessRequest>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.DocumentId))
                 .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type));
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Document, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Decision, opt => opt.Ignore());
 
             CreateMap<AccessRequest, AccessRequestResultDto>()
                 .ForMember(dest => dest.AccessRequestId, opt => opt.MapFrom(src => src.Id))
@@ -26,11 +32,11 @@ namespace Strongbox.Application.Mapping
 
             CreateMap<DecisionDto, Decision>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.AccessRequestId, opt => opt.MapFrom(src => src.AccessRequestId))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
-                .ForMember(dest => dest.AccessRequestId, opt => opt.MapFrom(src => src.AccessRequestId))
-                .ForMember(dest => dest.ApproverId, opt => opt.MapFrom(src => src.ApproverId))
+                .ForMember(dest => dest.ApproverId, opt => opt.Ignore())
                 .ForMember(dest => dest.AccessRequest, opt => opt.Ignore())
                 .ForMember(dest => dest.Approver, opt => opt.Ignore());
 
@@ -43,7 +49,6 @@ namespace Strongbox.Application.Mapping
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
-
             CreateMap<Document, DocumentAttributesResultDto>()
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Name))
@@ -52,17 +57,18 @@ namespace Strongbox.Application.Mapping
             CreateMap<Document, DocumentResultDto>()
                 .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.DocumentContent, opt => opt.MapFrom(src => src.Content));
+                .ForMember(dest => dest.DocumentContent, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.Access, opt => opt.Ignore());
 
             CreateMap<RegisterDto, User>()
                 .ForMember(u => u.PasswordHash, o => o.Ignore())
                 .ForMember(u => u.PasswordSalt, o => o.Ignore());
 
             CreateMap<User, UserResultDto>()
-                .ForMember(d => d.UserId, o => o.MapFrom(s => s.Id))
-                .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))
-                .ForMember(d => d.Username, o => o.MapFrom(s => s.Username))
-                .ForMember(d => d.Role, o => o.MapFrom(s => s.Role));
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));
         }
     }
 }

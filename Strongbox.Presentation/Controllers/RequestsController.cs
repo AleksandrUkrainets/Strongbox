@@ -15,27 +15,17 @@ namespace Strongbox.Presentation.Controllers
         {
             var id = await svc.CreateAccessRequestAsync(dto);
             if (id == null) return BadRequest("Cannot create request.");
+
             return Ok(id);
         }
 
 
         [HttpGet("my")]
-        public async Task<IActionResult> My([FromQuery] Guid userId)
-            => Ok(await svc.GetMyRequestsAsync(userId));
+        public async Task<IActionResult> My() => Ok(await svc.GetMyRequestsAsync());
 
 
         [HttpGet("pending")]
-        [Authorize(Policy = "ApproverOnly, AdminOnly")]
-        public async Task<IActionResult> Pending([FromQuery] Guid approverId)
-        {
-            try
-            {
-                return Ok(await svc.GetPendingRequestsAsync(approverId));
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
-        }
+        [Authorize(Roles = "Approver, Admin")]
+        public async Task<IActionResult> Pending() => Ok(await svc.GetPendingRequestsAsync());
     }
 }

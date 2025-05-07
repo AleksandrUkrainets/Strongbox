@@ -1,17 +1,31 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Strongbox.Application.DTOs;
 using Strongbox.Application.Interfaces;
 using Strongbox.Domain.Entities;
 using Strongbox.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace Strongbox.Application.Services
 {
-    public class DecisionService(IDecisionRepository decisionRepo, IAccessRequestRepository reqRepo, IUserRepository userRepo, IMapper mapper) : IDecisionService
+    public class DecisionService(IDecisionRepository decisionRepo,
+        IAccessRequestRepository reqRepo,
+        IUserRepository userRepo,
+        IMapper mapper,
+        IHttpContextAccessor httpCtx) : IDecisionService
     {
+        private Guid CurrentUserId()
+        {
+            var sub = httpCtx.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                      ?? throw new UnauthorizedAccessException();
+            return Guid.Parse(sub);
+        }
+
         public async Task<Guid?> CreateDecisionAsync(DecisionDto dto)
         {
-            var approver = await userRepo.GetUserAsync(dto.ApproverId);
-            if (approver == null || approver.Role != PersonRole.Approver)
+            var approverId = CurrentUserId();
+            var approver = await userRepo.GetUserAsync(approverId);
+            if (approver?.Role != PersonRole.Approver)
                 throw new UnauthorizedAccessException();
 
             var request = await reqRepo.GetAccessRequestAsync(dto.AccessRequestId);
@@ -22,14 +36,17 @@ namespace Strongbox.Application.Services
 
             var decision = mapper.Map<Decision>(dto);
             decision.Id = Guid.NewGuid();
+            decision.ApproverId = approverId;
+            decision.CreatedAt = DateTime.UtcNow;
 
             return await decisionRepo.CreateDecisionAsync(decision);
         }
 
-        public async Task<ICollection<DecisionResultDto>> GetDecisionsAsync(Guid approverId)
+        public async Task<ICollection<DecisionResultDto>> GetDecisionsAsync()
         {
+            var approverId = CurrentUserId();
             var approver = await userRepo.GetUserAsync(approverId);
-            if (approver == null || approver.Role != PersonRole.Approver)
+            if (approver?.Role != PersonRole.Approver)
                 throw new UnauthorizedAccessException();
 
             var decisions = await decisionRepo.GetAllDecisionsAsync();
@@ -37,10 +54,11 @@ namespace Strongbox.Application.Services
             return mapper.Map<List<DecisionResultDto>>(decisions);
         }
 
-        public async Task<DecisionResultDto?> GetDecisionAsync(Guid decisionId, Guid approverId)
+        public async Task<DecisionResultDto?> GetDecisionAsync(Guid decisionId)
         {
+            var approverId = CurrentUserId();
             var approver = await userRepo.GetUserAsync(approverId);
-            if (approver == null || approver.Role != PersonRole.Approver)
+            if (approver?.Role != PersonRole.Approver)
                 throw new UnauthorizedAccessException();
 
             var decision = await decisionRepo.GetDecisionAsync(decisionId);
@@ -51,14 +69,16 @@ namespace Strongbox.Application.Services
 
         public async Task<bool> UpdateDecisionAsync(Guid decisionId, DecisionDto dto)
         {
-            var approver = await userRepo.GetUserAsync(dto.ApproverId);
-            if (approver == null || approver.Role != PersonRole.Approver)
+            var approverId = CurrentUserId();
+            var approver = await userRepo.GetUserAsync(approverId);
+            if (approver?.Role != PersonRole.Approver)
                 throw new UnauthorizedAccessException();
 
             var existing = await decisionRepo.GetDecisionAsync(decisionId);
             if (existing == null) return false;
 
             mapper.Map(dto, existing);
+            existing.CreatedAt = DateTime.UtcNow;
             var updated = await decisionRepo.UpdateDecisionAsync(existing);
 
             var request = await reqRepo.GetAccessRequestAsync(existing.AccessRequestId);

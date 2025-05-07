@@ -7,7 +7,7 @@ namespace Strongbox.Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "ApproverOnly, AdminOnly")]
+    [Authorize(Roles = "Approver, Admin")]
     public class DecisionsController(IDecisionService svc) : ControllerBase
     {
         [HttpPost("submit")]
@@ -15,20 +15,22 @@ namespace Strongbox.Presentation.Controllers
         {
             var id = await svc.CreateDecisionAsync(dto);
             if (id == null) return BadRequest("Cannot create decision.");
+
             return Ok(id);
         }
 
 
         [HttpGet("all")]
-        public async Task<IActionResult> All([FromQuery] Guid approverId)
-            => Ok(await svc.GetDecisionsAsync(approverId));
+        public async Task<IActionResult> All()
+            => Ok(await svc.GetDecisionsAsync());
 
 
         [HttpGet(("get"))]
-        public async Task<IActionResult> Get([FromQuery] Guid decisionId, [FromQuery] Guid approverId)
+        public async Task<IActionResult> Get([FromQuery] Guid decisionId)
         {
-            var decision = await svc.GetDecisionAsync(decisionId, approverId);
+            var decision = await svc.GetDecisionAsync(decisionId);
             if (decision == null) return NotFound();
+
             return Ok(decision);
         }
 
